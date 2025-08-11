@@ -8,12 +8,61 @@ class StreamlitCloudService:
         """Inicializa o serviço para deploy no Streamlit Community Cloud"""
         pass
 
+    def _convert_secrets_to_dict(self, secrets_obj):
+        """Converte objetos secrets do Streamlit em dicionários Python comuns recursivamente"""
+        import copy
+        
+        # Se for um objeto secrets do Streamlit, converte para dict
+        if hasattr(secrets_obj, '_data'):
+            # Para objetos secrets do Streamlit, acessa os dados internos
+            data = dict(secrets_obj._data)
+            # Converte recursivamente todos os valores
+            result = {}
+            for key, value in data.items():
+                result[key] = self._convert_secrets_to_dict(value)
+            return result
+        elif hasattr(secrets_obj, 'to_dict'):
+            # Alguns objetos secrets podem ter método to_dict
+            return self._convert_secrets_to_dict(secrets_obj.to_dict())
+        elif isinstance(secrets_obj, dict):
+            # Para dicionários normais, faz conversão recursiva
+            result = {}
+            for key, value in secrets_obj.items():
+                result[key] = self._convert_secrets_to_dict(value)
+            return result
+        elif isinstance(secrets_obj, (list, tuple)):
+            # Para listas e tuplas, converte cada elemento
+            return [self._convert_secrets_to_dict(item) for item in secrets_obj]
+        else:
+            # Para outros tipos primitivos, faz uma cópia
+            try:
+                return copy.deepcopy(secrets_obj)
+            except:
+                # Se copy.deepcopy falhar, retorna o valor original
+                return secrets_obj
+
+    def _ensure_mutable_dict(self, data):
+        """Garante que os dados sejam um dicionário Python mutável comum, não um objeto secrets"""
+        import json
+        try:
+            # Converte para JSON e de volta para garantir que seja um dict Python comum
+            # Isso remove qualquer comportamento especial de objetos secrets
+            json_str = json.dumps(data, default=str)
+            return json.loads(json_str)
+        except Exception:
+            # Se a conversão JSON falhar, usa o método recursivo
+            return self._convert_secrets_to_dict(data)
+
     def get_user_credentials(self):
         """Obtém credenciais de usuário dos secrets do Streamlit ou arquivo local"""
         try:
             # Tenta primeiro os secrets do Streamlit (produção)
             if hasattr(st, 'secrets') and hasattr(st.secrets, 'user_credentials'):
-                return st.secrets['user_credentials']
+                # Converte o objeto secrets imutável em dict comum para permitir modificações
+                secrets_data = st.secrets['user_credentials']
+                # Usa conversão dupla para garantir mutabilidade completa
+                converted_data = self._ensure_mutable_dict(secrets_data)
+                return converted_data
 
             # Fallback para arquivo local (desenvolvimento)
             if os.path.exists('config.yaml'):
@@ -39,9 +88,11 @@ class StreamlitCloudService:
         try:
             # Tenta primeiro os secrets do Streamlit (produção)
             if hasattr(st, 'secrets') and hasattr(st.secrets, 'google_sheets_credentials'):
-                # Converte para dict se for um objeto secrets
-                creds = dict(st.secrets['google_sheets_credentials'])
-                return creds
+                # Converte para dict se for um objeto secrets e cria uma cópia profunda
+                secrets_data = st.secrets['google_sheets_credentials']
+                # Usa conversão dupla para garantir mutabilidade completa
+                converted_data = self._ensure_mutable_dict(secrets_data)
+                return converted_data
 
             # Fallback para arquivo local (desenvolvimento)
             if os.path.exists('credentials.json'):
