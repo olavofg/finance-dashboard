@@ -1,4 +1,4 @@
-# 💸 Dashboard Financeiro Pessoal
+# 💸 Dashboard Financeiro
 
 Dashboard interativo para controle de finanças pessoais, desenvolvido com Streamlit e integrado ao Google Sheets.
 
