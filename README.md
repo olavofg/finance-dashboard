@@ -1,61 +1,59 @@
-# Finance Dashboard - Streamlit Community Edition
+# 💸 Dashboard Financeiro Pessoal
 
-Uma dashboard de finanças pessoais construída com Streamlit, agora pronta para ser publicada gratuitamente no [Streamlit Community Cloud](https://streamlit.io/cloud), usando dados do Google Sheets.
+Dashboard interativo para controle de finanças pessoais, desenvolvido com Streamlit e integrado ao Google Sheets.
 
-## 🚀 Início Rápido
+## 🚀 Como usar
 
-1. **Configure seu Google Sheets** - Prepare sua planilha conforme instruções abaixo
-2. **Configure as credenciais** - Adicione `credentials.json` e configure variáveis de ambiente se necessário
-3. **Execute localmente** - Rode `streamlit run dashboard.py`
-4. **Publique grátis** - Faça deploy no [Streamlit Community Cloud](https://streamlit.io/cloud)
+1. **Clone o repositório**
+   ```bash
+   git clone <url-do-repositorio>
+   cd dashboard
+   ```
 
-## 📁 Estrutura do Projeto
+2. **Instale as dependências**
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-```
-├── dashboard.py              # Aplicação principal Streamlit
-├── streamlit_service.py      # Serviços auxiliares para Streamlit
-├── requirements.txt          # Dependências Python
-├── Dockerfile                # (Opcional) Configuração Docker
-├── config.yaml               # Configuração do app
-├── credentials.json          # Credenciais Google Sheets
-└── README.md                 # Este arquivo
-```
+3. **Configure as credenciais do Google Sheets**
+   - Crie um arquivo `credentials.json` com as credenciais da API do Google Sheets
+   - Configure a URL da planilha no arquivo `config.yaml`
 
-## 🔧 Configuração
+4. **Execute o dashboard**
+   ```bash
+   streamlit run dashboard.py
+   ```
 
-O app utiliza as seguintes configurações:
-- `credentials.json`: Credenciais da API do Google Sheets
-- `sheet_url`: URL da sua planilha Google Sheets
-- Variáveis de ambiente opcionais para produção
+## ⚙️ Configuração
+
+### Google Sheets
+- As abas devem ser nomeadas no formato: "Janeiro 2023", "Fevereiro 2024", etc.
+- Célula **M27**: Total de gastos do mês
+- Célula **B6**: Total de salário/receita do mês
+
+### Autenticação (opcional)
+Configure usuários e senhas no arquivo `config.yaml`
 
 ## 🌟 Funcionalidades
 
-- **Login Simples**: Autenticação opcional via senha
-- **Dados em Tempo Real**: Atualização ao vivo do Google Sheets
-- **Gráficos Interativos**: Análise financeira mensal com Plotly
-- **Design Responsivo**: Funciona em desktop e mobile
-- **Deploy Grátis**: Pronto para o Streamlit Community Cloud
+- 📊 **Métricas financeiras**: Total de gastos, receitas, economia e médias
+- 📈 **Gráficos interativos**: Análise visual dos dados mensais
+- 🎯 **Destaques**: Identifica melhores e piores períodos
+- 📅 **Filtros de período**: Analise intervalos específicos
+- � **Atualização em tempo real**: Dados sempre sincronizados com a planilha
 
-## 📊 Seções do Dashboard
+## 📦 Estrutura do Projeto
 
-1. **KPIs**: Gastos, receitas, saldo, médias
-2. **Destaques Mensais**: Melhores e piores meses
-3. **Gráficos**: Várias abas de visualização
-4. **Tabela de Dados**: Detalhamento mensal
-5. **Filtro de Período**: Analise intervalos específicos
+```
+├── dashboard.py              # Aplicação principal
+├── streamlit_service.py      # Serviços auxiliares
+├── config.yaml              # Configurações e credenciais
+├── credentials.json         # Credenciais Google Sheets
+└── requirements.txt         # Dependências Python
+```
 
 ## 🔒 Segurança
 
-- Autenticação opcional via streamlit_authenticator
-- Credenciais protegidas por variáveis de ambiente
-- Não armazene credenciais sensíveis no repositório
-
-## 💰 Custo
-
-O deploy no Streamlit Community Cloud é gratuito para projetos pessoais e de pequeno porte.
-
-## 📝 Notas
-
-- Requer Google Sheets com células específicas (M27 para despesas, B6 para receitas)
-- As abas da planilha devem ser nomeadas como "Janeiro 2023", "Fevereiro 2024", etc.
-- Os dados são cacheados por 1 hora para otimizar performance
+- Credenciais protegidas em arquivos de configuração
+- Autenticação opcional via senha
+- Não armazene credenciais sensíveis no repositório público
