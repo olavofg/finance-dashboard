@@ -8,7 +8,7 @@ import streamlit_authenticator as stauth
 from streamlit_service import StreamlitCloudService
 
 st.set_page_config(
-    page_title="Dashboard de Controle Financeiro",
+    page_title="Dashboard Financeiro",
     page_icon="💸",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -73,7 +73,7 @@ elif st.session_state.logged_in_just_now:
     st.session_state.logged_in_just_now = False
 
 # --- INTERFACE PÓS LOGIN ---
-# Este bloco agora é executado APENAS após a autenticação bem-sucedida
+# Este bloco é executado apenas após a autenticação bem-sucedida
 with st.container():
     col_welcome_text, col_logout_button = st.columns([10, 1])
     with col_welcome_text:
@@ -354,4 +354,4 @@ else:
     st.info("Não há dados no período selecionado para exibir a tabela de resumo.")
 
 st.markdown("---")
-st.markdown("Dashboard completo para uma análise aprofundada do seu controle financeiro.")
+st.markdown("Dashboard financeiro.")
