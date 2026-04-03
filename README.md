@@ -1,59 +1,70 @@
-# 💸 Dashboard Financeiro
+# 💸 Financial Dashboard
 
-Dashboard interativo para controle de finanças pessoais, desenvolvido com Streamlit e integrado ao Google Sheets.
+Interactive dashboard for personal finance tracking, developed with Streamlit and integrated with Google Sheets.
 
-## 🚀 Como usar
+## 🚀 How to use
 
-1. **Clone o repositório**
+1. **Clone the repository**
+
    ```bash
-   git clone <url-do-repositorio>
+   git clone <repository-url>
    cd dashboard
    ```
 
-2. **Instale as dependências**
+2. **Install dependencies**
+
    ```bash
    pip install -r requirements.txt
    ```
 
-3. **Configure as credenciais do Google Sheets**
-   - Crie um arquivo `credentials.json` com as credenciais da API do Google Sheets
-   - Configure a URL da planilha no arquivo `config.yaml`
+3. **Configure Google Sheets credentials**
 
-4. **Execute o dashboard**
+   * Create a `credentials.json` file with your Google Sheets API credentials
+   * Set the spreadsheet URL in the `config.yaml` file
+
+4. **Run the dashboard**
+
    ```bash
    streamlit run dashboard.py
    ```
 
-## ⚙️ Configuração
+## ⚙️ Configuration
 
 ### Google Sheets
-- As abas devem ser nomeadas no formato: "Janeiro 2023", "Fevereiro 2024", etc.
-- Célula **M27**: Total de gastos do mês
-- Célula **B6**: Total de salário/receita do mês
 
-### Autenticação (opcional)
-Configure usuários e senhas no arquivo `config.yaml`
+> ⚠️ **Disclaimer**
+> This spreadsheet is customized for my personal use and is currently private. However, the required structure is simple and can be adapted to your needs.
+> The dashboard expects sheets named by month (e.g., "January 2023", "February 2024") and specific cells containing the key financial data. Feel free to modify the structure as needed for your own use.
 
-## 🌟 Funcionalidades
+My template needs:
+* Sheets must be named in the format: "January 2023", "February 2024", etc.
+* Cell **M27**: Total monthly expenses
+* Cell **B6**: Total monthly salary/income
 
-- 📊 **Métricas financeiras**: Total de gastos, receitas, economia e médias
-- 📈 **Gráficos interativos**: Análise visual dos dados mensais
-- 🎯 **Destaques**: Identifica melhores e piores períodos
-- 📅 **Filtros de período**: Analise intervalos específicos
-- � **Atualização em tempo real**: Dados sempre sincronizados com a planilha
 
-## 📦 Estrutura do Projeto
+### Authentication (optional)
+
+Configure users and passwords in the `config.yaml` file
+
+## 🌟 Features
+
+* 📊 **Financial metrics**: Total expenses, income, savings, and averages
+* 📈 **Interactive charts**: Visual analysis of monthly data
+* 🎯 **Highlights**: Identifies best and worst periods
+* 📅 **Period filters**: Analyze specific time ranges
+* 🔄 **Real-time updates**: Data always synced with the spreadsheet
+
+## 📦 Project Structure
 
 ```
-├── dashboard.py              # Aplicação principal
-├── streamlit_service.py      # Serviços auxiliares
-├── config.yaml              # Configurações e credenciais
-├── credentials.json         # Credenciais Google Sheets
-└── requirements.txt         # Dependências Python
+├── dashboard.py             # Main application
+├── streamlit_service.py     # Helper services
+├── config.yaml              # Settings and credentials
+├── credentials.json         # Google Sheets credentials
+└── requirements.txt         # Python dependencies
 ```
 
-## 🔒 Segurança
+## 🔒 Security
 
-- Credenciais protegidas em arquivos de configuração
-- Autenticação opcional via senha
-- Não armazene credenciais sensíveis no repositório público
+* Credentials stored securely in configuration files
+* Optional password-based authentication
