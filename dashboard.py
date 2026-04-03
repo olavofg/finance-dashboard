@@ -88,7 +88,7 @@ with col_update_button:
         st.cache_data.clear() # Limpa o cache de dados
         st.rerun() # Força uma nova execução do script
 
-st.markdown("## 📊 Dashboard de Controle Financeiro Pessoal")
+st.markdown("## 📊 Dashboard Financeiro Pessoal")
 st.info("Resumo dos seus **gastos** e **rendimentos** mensais, com base nos dados da planilha.")
 
 @st.cache_resource
