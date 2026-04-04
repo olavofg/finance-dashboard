@@ -1,8 +1,8 @@
 # Financial Dashboard
 
-Interactive dashboard for personal finance tracking, developed with Streamlit and integrated with Google Sheets.
+Interactive dashboard for personal finance tracking. Developed with Streamlit and integrated with Google Sheets.
 
-## ✨ Features
+## Features
 
 * 📊 **Financial metrics**: Income, expenses, savings, averages, deltas, and annual projections
 * 📈 **Interactive charts**: Cumulative savings, savings rate with average line, composition %, and trend analysis
@@ -42,6 +42,8 @@ INCOME_CELL = 'B6'     # Change to the cell where your total income is
 As long as every monthly tab has a total expense value and a total income value somewhere, the dashboard will work. The cells just need to be in the same position across all tabs.
 
 > **Example**: If your spreadsheet has expenses in cell `D50` and income in `D10`, just update the constants to `EXPENSES_CELL = 'D50'` and `INCOME_CELL = 'D10'`.
+
+**In short**: all you need is a Google Sheets spreadsheet with one tab per month (e.g. `Janeiro 2023`) and two cells per tab — one for total expenses and one for total income. The dashboard handles everything else.
 
 ## ⚙️ Configuration
 
@@ -102,7 +104,7 @@ python -c "import bcrypt; print(bcrypt.hashpw(b'your_password', bcrypt.gensalt()
 
 Replace `your_password` with your chosen password. This will output something like `$2b$12$LJ3m4ys...` — use that value in the `password` field.
 
-## � Local Setup
+## 💻 Local Setup
 
 1. **Clone the repository**
 
@@ -173,7 +175,7 @@ Replace `your_password` with your chosen password. This will output something li
 
 > For more details, see the [Streamlit deploy documentation](https://docs.streamlit.io/deploy/streamlit-community-cloud).
 
-## �️ Project Structure
+## 🗂️ Project Structure
 
 ```
 ├── dashboard.py             # Main application
