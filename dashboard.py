@@ -244,7 +244,7 @@ annual_projection = df_filtered['Economia'].mean() * 12
 avg_savings_rate = df_filtered['Taxa de Economia (%)'].mean()
 
 col5.metric("📊 Mediana de Gastos", f"R$ {format_currency_br(median_expenses)}")
-col6.metric("📌 Média de Economia", f"{format_currency_br(avg_savings_rate)}%")
+col6.metric("📌 Taxa Média de Economia", f"{format_currency_br(avg_savings_rate)}%")
 col7.metric("📅 Projeção Anual", f"R$ {format_currency_br(annual_projection)}")
 col8.metric("💵 Média de Receita", f"R$ {format_currency_br(avg_income)}")
 
