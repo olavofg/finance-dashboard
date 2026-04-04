@@ -292,7 +292,7 @@ with top_bar:
     col_welcome, col_update, col_logout = st.columns([9, 1, 1], gap="small")
     col_welcome.markdown(f"#### 👋 Bem-vindo(a), **{name}**")
 
-    if col_update.button("🔄 Atualizar", use_container_width=True):
+    if col_update.button("🔄 Atualizar"):
         st.cache_data.clear()
         st.rerun()
 
