@@ -10,8 +10,7 @@ __pycache__/
 venv/
 env/
 
-.streamlit/
-secrets.toml
+.streamlit/secrets.toml
 DEPLOY.md
 
 config.yaml
