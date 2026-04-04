@@ -1,91 +1,23 @@
-import re
 from datetime import datetime
 
-import gspread
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 import streamlit_authenticator as stauth
 from dateutil.relativedelta import relativedelta
 
+from constants import MONTH_NAMES_PT, PERIOD_PRESETS
+from data_service import authenticate_gspread, load_monthly_financial_summary
+from helpers import fmt_delta, format_currency_br
 from streamlit_service import StreamlitCloudService
 
-
-# Constants
-
-MONTH_NAMES_PT = {
-    1: 'Janeiro', 2: 'Fevereiro', 3: 'Março', 4: 'Abril',
-    5: 'Maio', 6: 'Junho', 7: 'Julho', 8: 'Agosto',
-    9: 'Setembro', 10: 'Outubro', 11: 'Novembro', 12: 'Dezembro'
-}
-
-MONTH_NAME_TO_NUMBER = {name.lower(): num for num, name in MONTH_NAMES_PT.items()}
-
-SUMMARY_COLUMNS = [
-    'Mês', 'Total de Gastos', 'Total de Receita',
-    'Data do Mês', 'Economia', 'Taxa de Economia (%)'
-]
-
-EXPENSES_CELL = 'M27'
-INCOME_CELL = 'B6'
-
-# Page config
 
 st.set_page_config(
     page_title="Dashboard Financeiro",
     page_icon="💸",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed",
 )
-
-# Pure helpers
-
-
-def format_currency_br(value):
-    """Format a numeric value to Brazilian currency format."""
-    if pd.isna(value):
-        return ""
-    try:
-        return f"{float(value):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-    except ValueError:
-        return str(value)
-
-
-def parse_brl_value(raw):
-    """Parse a BRL currency string (e.g. 'R$ 1.234,56') into a float."""
-    if not raw:
-        return 0.0
-    try:
-        return float(str(raw).replace('R$', '').replace('.', '').replace(',', '.'))
-    except ValueError:
-        return None
-
-
-def parse_sheet_name_to_date(sheet_name):
-    """Parse a sheet tab name (e.g. 'Janeiro 2023') into a date."""
-    match = re.match(r'([a-zA-ZçÇ]+)\s+(\d{2,4})', sheet_name, re.IGNORECASE)
-    if not match:
-        return None
-
-    month = MONTH_NAME_TO_NUMBER.get(match.group(1).lower())
-    if not month:
-        return None
-
-    year_str = match.group(2)
-    year = int(year_str)
-    # Normalize 2-digit years to full 4-digit (e.g. 25 -> 2025).
-    if len(year_str) == 2:
-        current_century = (datetime.now().year // 100) * 100
-        cutoff = datetime.now().year % 100 + 5
-        year = (current_century - 100 + year) if year > cutoff else (current_century + year)
-
-    try:
-        return datetime(year, month, 1).date()
-    except ValueError:
-        return None
-
-
-# UI helpers
 
 
 def _show_config_error(message):
@@ -124,128 +56,22 @@ def _validate_config(config):
     return None
 
 
-# Cached resources
-
-
 @st.cache_resource
-def get_streamlit_service():
-    """Return a singleton StreamlitCloudService instance."""
+def _get_streamlit_service():
     return StreamlitCloudService()
 
 
-@st.cache_resource
-def authenticate_gspread(creds_dict):
-    """Authenticate with Google Sheets API."""
-    return gspread.service_account_from_dict(creds_dict)
-
-
-@st.cache_data(ttl=3600)
-def load_monthly_financial_summary(_gc, url):
-    """Load and summarize monthly financial data from Google Sheets.
-
-    Returns (DataFrame, list[str]) — the summary data and any warnings.
-    """
-    warnings = []
-    all_data = []
-
-    try:
-        spreadsheet = _gc.open_by_url(url)
-        worksheets = spreadsheet.worksheets()
-    except Exception as e:
-        return pd.DataFrame(columns=SUMMARY_COLUMNS), [
-            f"Erro ao abrir a planilha ou listar abas: {e}. Verifique a URL e permissões."
-        ]
-
-    sheet_info = [(ws.title, parse_sheet_name_to_date(ws.title)) for ws in worksheets]
-    sheet_info = [(n, d) for n, d in sheet_info if d]
-
-    if not sheet_info:
-        warnings.append(
-            "Nenhuma aba com nome de mês/ano válido foi encontrada na sua planilha. "
-            "Verifique os nomes das suas abas (ex: 'Janeiro 2023')."
-        )
-        return pd.DataFrame(columns=SUMMARY_COLUMNS), warnings
-
-    # Batch fetch all cells in a single API call
-    ranges = []
-    for sheet_name, _ in sheet_info:
-        quoted = f"'{sheet_name}'"
-        ranges.append(f"{quoted}!{EXPENSES_CELL}")
-        ranges.append(f"{quoted}!{INCOME_CELL}")
-
-    try:
-        batch_result = spreadsheet.values_batch_get(ranges)
-    except Exception as e:
-        return pd.DataFrame(columns=SUMMARY_COLUMNS), [
-            f"Erro ao buscar dados das abas em lote: {e}. Verifique a URL e permissões."
-        ]
-
-    value_ranges = batch_result.get('valueRanges', [])
-
-    for i, (sheet_name, _) in enumerate(sheet_info):
-        try:
-            expenses_data = value_ranges[i * 2] if i * 2 < len(value_ranges) else {}
-            income_data = value_ranges[i * 2 + 1] if i * 2 + 1 < len(value_ranges) else {}
-
-            expenses_values = expenses_data.get('values', [[]])
-            income_values = income_data.get('values', [[]])
-
-            expenses_raw = expenses_values[0][0] if expenses_values and expenses_values[0] else None
-            income_raw = income_values[0][0] if income_values and income_values[0] else None
-
-            expenses = parse_brl_value(expenses_raw)
-            if expenses is None:
-                warnings.append(f"Formato inválido na célula {EXPENSES_CELL} da aba '{sheet_name}'. Usando 0.0 para gastos.")
-                expenses = 0.0
-
-            income = parse_brl_value(income_raw)
-            if income is None:
-                warnings.append(f"Formato inválido na célula {INCOME_CELL} da aba '{sheet_name}'. Usando 0.0 para receita.")
-                income = 0.0
-
-            all_data.append({
-                'Mês': sheet_name,
-                'Total de Gastos': expenses,
-                'Total de Receita': income,
-                'Data do Mês': parse_sheet_name_to_date(sheet_name)
-            })
-        except Exception as e:
-            warnings.append(f"Erro ao processar a aba '{sheet_name}': {e}. Verifique as células {EXPENSES_CELL} e {INCOME_CELL}.")
-            continue
-
-    df = pd.DataFrame(all_data)
-    df['Data do Mês'] = pd.to_datetime(df['Data do Mês'], errors='coerce')
-    df.dropna(subset=['Data do Mês'], inplace=True)
-
-    if df.empty:
-        warnings.append("Nenhum dado válido foi carregado após o processamento das abas.")
-        return pd.DataFrame(columns=SUMMARY_COLUMNS), warnings
-
-    df.sort_values('Data do Mês', inplace=True)
-    df['Economia'] = df['Total de Receita'] - df['Total de Gastos']
-    df['Taxa de Economia (%)'] = df.apply(
-        lambda row: (row['Economia'] / row['Total de Receita']) * 100
-        if row['Total de Receita'] and row['Total de Receita'] != 0 else 0,
-        axis=1
-    )
-    return df, warnings
-
-
-# App flow
-
-streamlit_service = get_streamlit_service()
+streamlit_service = _get_streamlit_service()
 
 st.markdown("## 📊 Dashboard Financeiro Pessoal")
-st.markdown("Centralizando e visualizando receitas, despesas, saldo e indicadores financeiros.")
+st.markdown("Visualizando receitas, gastos e indicadores financeiros.")
 top_bar = st.container()
 st.markdown("---")
 
-# Validate secrets
 secrets_error = streamlit_service.validate_secrets()
 if secrets_error:
     _show_config_error(secrets_error)
 
-# Load and validate config
 try:
     config = streamlit_service.get_user_credentials()
     config_error = _validate_config(config)
@@ -254,30 +80,30 @@ try:
 
     google_sheets_credentials = streamlit_service.get_google_sheets_credentials()
     if not google_sheets_credentials:
-        _show_config_error("Credenciais do Google Sheets não encontradas. Verifique os secrets ou arquivo credentials.json.")
+        _show_config_error("Credenciais do Google Sheets não encontradas.")
 except Exception as e:
     _show_config_error(f"Erro crítico ao carregar configurações: {e}")
 
-# Authentication
 authenticator = stauth.Authenticate(
     config['credentials'],
     cookie_name=config['cookie']['name'],
     cookie_key=config['cookie']['key'],
-    cookie_expiry_days=config['cookie']['expiry_days']
+    cookie_expiry_days=config['cookie']['expiry_days'],
 )
 
-# Skip login form when already authenticated
 if st.session_state.get('authentication_status'):
     name = st.session_state.get('name')
-    username = st.session_state.get('username')
 else:
     col1, col2, col3 = st.columns([1, 1, 1])
     with col2:
-        name, auth_status, username = authenticator.login(
+        name, auth_status, _ = authenticator.login(
             location='main',
-            fields={'Form name': '🔐 Acessar Dashboard Financeiro',
-                    'Username': 'Usuário', 'Password': 'Senha',
-                    'Login': 'Entrar'}
+            fields={
+                'Form name': '🔐 Acessar Dashboard Financeiro',
+                'Username': 'Usuário',
+                'Password': 'Senha',
+                'Login': 'Entrar',
+            },
         )
 
     if auth_status is False:
@@ -287,7 +113,6 @@ else:
     elif auth_status is None:
         st.stop()
 
-# Dashboard top bar
 with top_bar:
     col_welcome, col_update, col_logout = st.columns([9, 1, 1], gap="small")
     col_welcome.markdown(f"#### 👋 Bem-vindo(a), **{name}**")
@@ -299,18 +124,16 @@ with top_bar:
     with col_logout:
         authenticator.logout(button_name="🔓 Sair", location='main')
 
-# Google Sheets connection
 try:
     gc = authenticate_gspread(google_sheets_credentials)
 except Exception as e:
     _show_config_error(f"Erro ao autenticar com Google Sheets: {e}")
 
-SHEET_URL = streamlit_service.get_sheet_url()
-if not SHEET_URL:
-    _show_config_error("URL da planilha não encontrada. Configure 'sheet_url' nos secrets ou no config.yaml.")
+sheet_url = streamlit_service.get_sheet_url()
+if not sheet_url:
+    _show_config_error("URL da planilha não encontrada.")
 
-# Load data
-df_summary, data_warnings = load_monthly_financial_summary(gc, SHEET_URL)
+df_summary, data_warnings = load_monthly_financial_summary(gc, sheet_url)
 for warning in data_warnings:
     st.warning(warning)
 
@@ -324,13 +147,7 @@ month_year_options = [
     for d in sorted(df_summary['Data do Mês'].unique())
 ]
 month_year_strings = [opt[0] for opt in month_year_options]
-
-PERIOD_PRESETS = {
-    'Tudo': None,
-    'Últimos 12': 12,
-    'Últimos 6': 6,
-    'Ano atual': None,
-}
+current_month_start = datetime.now().replace(day=1).date()
 
 with st.expander("📅 Filtro de Período", expanded=True):
     preset = st.segmented_control(
@@ -340,8 +157,6 @@ with st.expander("📅 Filtro de Período", expanded=True):
         selection_mode='single',
     )
 
-    # Compute start/end indices based on preset
-    current_month_start = datetime.now().replace(day=1).date()
     default_end_index = len(month_year_strings) - 1
     for i, (_, d) in enumerate(month_year_options):
         if pd.Timestamp(d).date() < current_month_start:
@@ -357,8 +172,7 @@ with st.expander("📅 Filtro de Período", expanded=True):
                 default_start_index = i
                 break
     elif preset and PERIOD_PRESETS.get(preset):
-        n_months = PERIOD_PRESETS[preset]
-        cutoff = current_month_start - relativedelta(months=n_months)
+        cutoff = current_month_start - relativedelta(months=PERIOD_PRESETS[preset])
         default_start_index = 0
         for i, (_, d) in enumerate(month_year_options):
             if pd.Timestamp(d).date() >= cutoff:
@@ -368,35 +182,27 @@ with st.expander("📅 Filtro de Período", expanded=True):
         default_start_index = 0
 
     col1, col2 = st.columns(2)
-    if month_year_strings:
-        start_month_str = col1.selectbox("Mês de Início:", options=month_year_strings, index=default_start_index)
-        end_month_str = col2.selectbox("Mês de Fim:", options=month_year_strings, index=default_end_index)
-    else:
-        st.warning("Não há meses válidos para filtrar. Verifique os dados da sua planilha.")
-        st.stop()
+    start_month_str = col1.selectbox("Mês de Início:", options=month_year_strings, index=default_start_index)
+    end_month_str = col2.selectbox("Mês de Fim:", options=month_year_strings, index=default_end_index)
 
 start_date = next((d for s, d in month_year_options if s == start_month_str), None)
 end_date_raw = next((d for s, d in month_year_options if s == end_month_str), None)
+end_date = end_date_raw.replace(day=pd.Timestamp(end_date_raw).days_in_month) if end_date_raw else None
 
-if end_date_raw:
-    end_date = end_date_raw.replace(day=pd.Timestamp(end_date_raw).days_in_month)
-else:
-    end_date = None
+if not start_date or not end_date:
+    st.warning("Não foi possível determinar o período de filtro.")
+    st.stop()
 
-if start_date and end_date:
-    if start_date > end_date:
-        st.error("Erro: O mês de início não pode ser posterior ao mês de fim.")
-        df_filtered = pd.DataFrame()
-    else:
-        df_filtered = df_summary[
-            (df_summary['Data do Mês'] >= start_date) & (df_summary['Data do Mês'] <= end_date)
-        ].copy()
-else:
-    st.warning("Não foi possível determinar o período de filtro. Verifique os dados da planilha e os nomes das abas.")
-    df_filtered = pd.DataFrame()
+if start_date > end_date:
+    st.error("O mês de início não pode ser posterior ao mês de fim.")
+    st.stop()
+
+df_filtered = df_summary[
+    (df_summary['Data do Mês'] >= start_date) & (df_summary['Data do Mês'] <= end_date)
+].copy()
 
 if df_filtered.empty:
-    st.info("Não há dados para o período selecionado ou os dados filtrados resultaram em um DataFrame vazio.")
+    st.info("Não há dados para o período selecionado.")
     st.stop()
 
 # KPIs
@@ -408,10 +214,9 @@ total_expenses = df_filtered['Total de Gastos'].sum()
 net_savings = df_filtered['Economia'].sum()
 avg_expenses = df_filtered['Total de Gastos'].mean()
 
-# Delta % — filtered period average vs overall average (excluding current and future months)
-df_baseline = df_summary[df_summary['Data do Mês'] < str(current_month_start)]
-is_full_range = len(df_filtered) >= len(df_baseline)
-if not is_full_range and len(df_baseline) > len(df_filtered):
+# Delta: filtered period avg vs overall avg (excluding current/future months)
+df_baseline = df_summary[df_summary['Data do Mês'] < pd.Timestamp(current_month_start)]
+if len(df_baseline) > len(df_filtered):
     avg_income_all = df_baseline['Total de Receita'].mean()
     avg_expenses_all = df_baseline['Total de Gastos'].mean()
     avg_savings_all = df_baseline['Economia'].mean()
@@ -426,15 +231,11 @@ if not is_full_range and len(df_baseline) > len(df_filtered):
 else:
     delta_income = delta_expenses = delta_savings = None
 
-def _fmt_delta(val):
-    return f"{val:+.1f}% vs média" if val is not None else None
-
-col1.metric("💵 Total de Receita", f"R$ {format_currency_br(total_income)}", delta=_fmt_delta(delta_income))
-col2.metric("💰 Total de Gastos", f"R$ {format_currency_br(total_expenses)}", delta=_fmt_delta(delta_expenses), delta_color="inverse")
-col3.metric("📈 Economia Líquida", f"R$ {format_currency_br(net_savings)}", delta=_fmt_delta(delta_savings))
+col1.metric("💵 Total de Receita", f"R$ {format_currency_br(total_income)}", delta=fmt_delta(delta_income))
+col2.metric("💰 Total de Gastos", f"R$ {format_currency_br(total_expenses)}", delta=fmt_delta(delta_expenses), delta_color="inverse")
+col3.metric("📈 Economia Líquida", f"R$ {format_currency_br(net_savings)}", delta=fmt_delta(delta_savings))
 col4.metric("📊 Média de Gastos Mensais", f"R$ {format_currency_br(avg_expenses)}")
 
-# Complementary metrics
 col5, col6, col7, col8 = st.columns(4)
 
 median_expenses = df_filtered['Total de Gastos'].median()
@@ -519,10 +320,11 @@ if not df_filtered.empty:
 
     with tabs[3]:
         df_comp = df_filtered[['Mês', 'Total de Gastos', 'Economia']].copy()
-        df_comp['Gastos (%)'] = df_comp['Total de Gastos'] / (df_comp['Total de Gastos'] + df_comp['Economia']) * 100
-        df_comp['Economia (%)'] = df_comp['Economia'] / (df_comp['Total de Gastos'] + df_comp['Economia']) * 100
+        total = df_comp['Total de Gastos'] + df_comp['Economia']
+        df_comp['Gastos (%)'] = df_comp['Total de Gastos'].div(total).fillna(0) * 100
+        df_comp['Economia (%)'] = df_comp['Economia'].div(total).fillna(0) * 100
         fig = px.bar(
-            df_comp.melt(id_vars='Mês', value_vars=['Gastos (%)', 'Economia (%)'],
+            df_comp.melt(id_vars='Mês', value_vars=['Economia (%)', 'Gastos (%)'],
                         var_name='Tipo', value_name='Percentual'),
             x='Mês', y='Percentual', color='Tipo', barmode='stack', text='Percentual',
             labels={'Percentual': '%', 'Tipo': 'Tipo'},
@@ -562,7 +364,7 @@ if not df_filtered.empty:
             'Total de Gastos': lambda x: f"R$ {format_currency_br(x)}",
             'Total de Receita': lambda x: f"R$ {format_currency_br(x)}",
             'Economia': lambda x: f"R$ {format_currency_br(x)}",
-            'Taxa de Economia (%)': lambda x: f"{format_currency_br(x).replace('R$ ', '')}%"
+            'Taxa de Economia (%)': lambda x: f"{format_currency_br(x)}%"
         }),
         width='stretch'
     )

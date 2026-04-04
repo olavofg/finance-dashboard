@@ -58,65 +58,53 @@ class StreamlitCloudService:
         try:
             if hasattr(st, 'secrets') and hasattr(st.secrets, 'user_credentials'):
                 return self._convert_secrets_to_dict(st.secrets['user_credentials'])
+        except Exception as e:
+            logger.exception("Failed to load credentials from secrets: %s", e)
 
+        try:
             if os.path.exists('config.yaml'):
                 with open('config.yaml', 'r', encoding='utf-8') as file:
                     return yaml.safe_load(file)
-
-            return None
-
         except Exception as e:
-            if os.path.exists('config.yaml'):
-                try:
-                    with open('config.yaml', 'r', encoding='utf-8') as file:
-                        return yaml.safe_load(file)
-                except Exception as fallback_error:
-                    logger.exception("Failed to load config.yaml fallback: %s", fallback_error)
-            logger.exception("Failed to load user credentials: %s", e)
-            return None
+            logger.exception("Failed to load config.yaml: %s", e)
+
+        return None
 
     def get_google_sheets_credentials(self):
         """Load Google Sheets service-account credentials from secrets or local file."""
         try:
             if hasattr(st, 'secrets') and hasattr(st.secrets, 'google_sheets_credentials'):
                 return self._convert_secrets_to_dict(st.secrets['google_sheets_credentials'])
+        except Exception as e:
+            logger.exception("Failed to load credentials from secrets: %s", e)
 
+        try:
             if os.path.exists('credentials.json'):
                 with open('credentials.json', 'r', encoding='utf-8') as file:
                     return json.load(file)
-
-            return None
-
         except Exception as e:
-            if os.path.exists('credentials.json'):
-                try:
-                    with open('credentials.json', 'r', encoding='utf-8') as file:
-                        return json.load(file)
-                except Exception as fallback_error:
-                    logger.exception("Failed to load credentials.json fallback: %s", fallback_error)
-            logger.exception("Failed to load Google Sheets credentials: %s", e)
-            return None
+            logger.exception("Failed to load credentials.json: %s", e)
+
+        return None
 
     def get_sheet_url(self):
         """Get the Google Sheets URL from secrets or local config.yaml."""
         try:
             if hasattr(st, 'secrets') and hasattr(st.secrets, 'sheet_url'):
                 return st.secrets['sheet_url']
-
-            if os.path.exists('config.yaml'):
-                try:
-                    with open('config.yaml', 'r', encoding='utf-8') as file:
-                        config = yaml.safe_load(file)
-                        if config and 'sheet_url' in config:
-                            return config['sheet_url']
-                except Exception as e:
-                    logger.exception("Failed to load sheet_url from config.yaml: %s", e)
-
-            return None
-
         except Exception as e:
-            logger.exception("Failed to get sheet URL: %s", e)
-            return None
+            logger.exception("Failed to load sheet_url from secrets: %s", e)
+
+        try:
+            if os.path.exists('config.yaml'):
+                with open('config.yaml', 'r', encoding='utf-8') as file:
+                    config = yaml.safe_load(file)
+                    if config and 'sheet_url' in config:
+                        return config['sheet_url']
+        except Exception as e:
+            logger.exception("Failed to load sheet_url from config.yaml: %s", e)
+
+        return None
 
     def validate_secrets(self):
         """Validate that all required secrets are present (skipped when local config files exist).
