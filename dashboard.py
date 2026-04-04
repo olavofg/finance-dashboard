@@ -540,6 +540,12 @@ if not df_filtered.empty:
             labels={'Valor': 'Total (R$)', 'Tipo': 'Tipo'},
             color_discrete_map={'Total de Gastos': '#EF553B', 'Economia': '#00CC96'}
         )
+        avg_gastos = df_filtered['Total de Gastos'].mean()
+        avg_economia = df_filtered['Economia'].mean()
+        fig.add_hline(y=avg_gastos, line_dash="dash", line_color="rgba(239, 85, 59, 0.5)",
+                      annotation_text=f"Média Gastos: R$ {format_currency_br(avg_gastos)}", annotation_position="top left")
+        fig.add_hline(y=avg_economia, line_dash="dash", line_color="rgba(0, 204, 150, 0.5)",
+                      annotation_text=f"Média Economia: R$ {format_currency_br(avg_economia)}", annotation_position="bottom left")
         fig.update_layout(yaxis_tickprefix="R$ ")
         st.plotly_chart(fig, width='stretch')
 else:
