@@ -2,47 +2,19 @@
 
 Interactive dashboard for personal finance tracking, developed with Streamlit and integrated with Google Sheets.
 
-## 🚀 How to use
+## 🌟 Features
 
-1. **Clone the repository**
+* 📊 **Financial metrics**: Income, expenses, savings, averages, deltas, and annual projections
+* 📈 **Interactive charts**: Cumulative savings, savings rate with average line, composition %, and trend analysis
+* 🎯 **Monthly highlights**: Identifies best and worst months for income, expenses, and savings
+* 📅 **Period filters**: Presets (Last 6/12 months, current year) and custom date range
+* 🔐 **Authentication**: Password-protected access with cookie-based session persistence
+* 🔄 **Real-time sync**: Data always up to date with your Google Sheets spreadsheet
 
-   ```bash
-   git clone <repository-url>
-   cd finance-dashboard
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Configure Google Sheets credentials**
-
-   * Create a `credentials.json` file with your Google Sheets API credentials
-   * Set the spreadsheet URL in the `config.yaml` file
-
-4. **Run the dashboard**
-
-   ```bash
-   streamlit run dashboard.py
-   ```
-
-5. **Or run with Docker**
-
-   ```bash
-   docker build -t finance-dashboard .
-   docker run -p 8501:8501 finance-dashboard
-   ```
-
-## ⚙️ Configuration
-
-### Google Sheets
+## 📋 Spreadsheet Structure
 
 > ⚠️ **Disclaimer**
 > This spreadsheet is customized for my personal use and is currently private. However, the required structure is simple and can be easily adapted to your needs.
-
-#### How the code reads your spreadsheet
 
 The dashboard reads data from a single Google Sheets spreadsheet. Here's what it expects:
 
@@ -58,7 +30,7 @@ The dashboard reads data from a single Google Sheets spreadsheet. Here's what it
 
 3. **Everything else is computed automatically** — the dashboard calculates savings (`income - expenses`), savings rate (`savings / income × 100`), cumulative totals, averages, deltas, and projections from those two values per month.
 
-#### Adapting to your spreadsheet
+### Adapting to your spreadsheet
 
 You only need to change **two constants** at the top of `dashboard.py`:
 
@@ -71,31 +43,18 @@ As long as every monthly tab has a total expense value and a total income value 
 
 > **Example**: If your spreadsheet has expenses in cell `D50` and income in `D10`, just update the constants to `EXPENSES_CELL = 'D50'` and `INCOME_CELL = 'D10'`.
 
+## ⚙️ Configuration
 
-### Authentication (optional)
+### Google Sheets credentials
 
-Configure users and passwords in the `config.yaml` file
+After creating and setting up your financial spreadsheet with the structure described above, you need to connect it to the dashboard via a Google Cloud service account:
 
-### Local config files
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/iam-admin/serviceaccounts)
+2. Create a service account and download the JSON key as `credentials.json`
+3. Enable the **Google Sheets API** in your GCP project
+4. Share your spreadsheet with the service account email (the `client_email` field in the JSON)
 
-**`config.yaml`** — user credentials, authentication settings, and spreadsheet URL:
-
-```yaml
-credentials:
-  usernames:
-    your_username:
-      name: Your Name
-      password: $2b$12$...  # bcrypt-hashed password
-
-cookie:
-  name: finance_dashboard_cookie
-  key: some_random_secret_key
-  expiry_days: 30
-
-sheet_url: https://docs.google.com/spreadsheets/d/your-spreadsheet-id/edit
-```
-
-**`credentials.json`** — Google Sheets service account credentials:
+**`credentials.json`** format:
 
 ```json
 {
@@ -108,29 +67,118 @@ sheet_url: https://docs.google.com/spreadsheets/d/your-spreadsheet-id/edit
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
   "token_uri": "https://oauth2.googleapis.com/token",
   "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/your-service-account%40your-project.iam.gserviceaccount.com",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/...",
   "universe_domain": "googleapis.com"
 }
 ```
 
-> Download this file from the Google Cloud Console under **IAM & Admin → Service Accounts → Keys**.
+### Authentication
 
-## 🌟 Features
+The dashboard requires login to access. Users and passwords are configured in `config.yaml`. Passwords **must** be bcrypt-hashed.
 
-* 📊 **Financial metrics**: Total expenses, income, savings, and averages
-* 📈 **Interactive charts**: Visual analysis of monthly data
-* 🎯 **Highlights**: Identifies best and worst periods
-* 📅 **Period filters**: Analyze specific time ranges
-* 🔄 **Real-time updates**: Data always synced with the spreadsheet
+To generate a bcrypt hash:
+
+```bash
+pip install bcrypt
+python -c "import bcrypt; print(bcrypt.hashpw(b'your_password', bcrypt.gensalt()).decode())"
+```
+
+This will output something like `$2b$12$LJ3m4ys...` — use that value in the `password` field.
+
+**`config.yaml`** — user credentials, authentication settings, and spreadsheet URL:
+
+```yaml
+credentials:
+  usernames:
+    your_username:
+      name: Your Name
+      password: $2b$12$...  # bcrypt-hashed password (see above)
+
+cookie:
+  name: finance_dashboard_cookie
+  key: some_random_secret_key  # any random string
+  expiry_days: 30
+
+sheet_url: https://docs.google.com/spreadsheets/d/your-spreadsheet-id/edit
+```
+
+## 🚀 Local Setup
+
+1. **Clone the repository**
+
+   ```bash
+   git clone <repository-url>
+   cd finance-dashboard
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. **Add your config files** — create `credentials.json` and `config.yaml` as described above
+
+4. **Run the dashboard**
+
+   ```bash
+   streamlit run dashboard.py
+   ```
+
+5. **Or run with Docker**
+
+   ```bash
+   docker build -t finance-dashboard .
+   docker run -p 8501:8501 finance-dashboard
+   ```
+
+## ☁️ Deploy to Streamlit Community Cloud
+
+1. Push your repository to GitHub (make sure secrets are **not** committed)
+2. Go to [Streamlit Community Cloud](https://share.streamlit.io/) and connect your GitHub repo
+3. In the app settings, add your secrets under **Advanced settings → Secrets** using TOML format:
+
+   ```toml
+   sheet_url = "https://docs.google.com/spreadsheets/d/your-spreadsheet-id/edit"
+
+   [google_sheets_credentials]
+   type = "service_account"
+   project_id = "your-project-id"
+   private_key_id = "key-id"
+   private_key = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+   client_email = "your-service-account@your-project.iam.gserviceaccount.com"
+   client_id = "123456789"
+   auth_uri = "https://accounts.google.com/o/oauth2/auth"
+   token_uri = "https://oauth2.googleapis.com/token"
+   auth_provider_x509_cert_url = "https://www.googleapis.com/oauth2/v1/certs"
+   client_x509_cert_url = "https://www.googleapis.com/robot/v1/metadata/x509/..."
+   universe_domain = "googleapis.com"
+
+   [user_credentials.credentials.usernames.your_username]
+   name = "Your Name"
+   password = "$2b$12$..."
+
+   [user_credentials.cookie]
+   name = "finance_dashboard_cookie"
+   key = "some_random_secret_key"
+   expiry_days = 30
+   ```
+
+   > **Tip**: To convert your `credentials.json` to TOML, copy each JSON field as a key-value pair under `[google_sheets_credentials]`. Strings must be quoted and `\n` in the private key must be preserved as-is.
+
+4. Deploy — Streamlit will install dependencies from `requirements.txt` automatically
+
+> For more details, see the [Streamlit deploy documentation](https://docs.streamlit.io/deploy/streamlit-community-cloud).
 
 ## 📦 Project Structure
 
 ```
 ├── dashboard.py             # Main application
 ├── streamlit_service.py     # Config loader (secrets / local files)
+├── .streamlit/config.toml   # Streamlit theme settings
 ├── config.yaml              # User credentials (local dev, git-ignored)
 ├── credentials.json         # Google Sheets credentials (local dev, git-ignored)
-├── Dockerfile               # Local development container
+├── Dockerfile               # Container for local development
 ├── requirements.txt         # Python dependencies
 └── .gitignore               # Prevents secrets from being committed
 ```
@@ -139,4 +187,4 @@ sheet_url: https://docs.google.com/spreadsheets/d/your-spreadsheet-id/edit
 
 * **Never commit secrets**: `config.yaml` and `credentials.json` are in `.gitignore`
 * **Production**: credentials are stored in [Streamlit Secrets](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management)
-* Optional password-based authentication via `streamlit-authenticator`
+* Password-based authentication via `streamlit-authenticator` with bcrypt-hashed passwords
