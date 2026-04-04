@@ -409,13 +409,13 @@ st.markdown("---")
 st.subheader("📈 Métricas de Resumo do Período")
 col1, col2, col3, col4 = st.columns(4)
 
-total_expenses = df_filtered['Total de Gastos'].sum()
 total_income = df_filtered['Total de Receita'].sum()
+total_expenses = df_filtered['Total de Gastos'].sum()
 net_savings = df_filtered['Economia'].sum()
 avg_expenses = df_filtered['Total de Gastos'].mean()
 
-col1.metric("💰 Total de Gastos", f"R$ {format_currency_br(total_expenses)}")
-col2.metric("💵 Total de Receita", f"R$ {format_currency_br(total_income)}")
+col1.metric("💵 Total de Receita", f"R$ {format_currency_br(total_income)}")
+col2.metric("💰 Total de Gastos", f"R$ {format_currency_br(total_expenses)}")
 col3.metric("📈 Economia Líquida", f"R$ {format_currency_br(net_savings)}")
 col4.metric("📊 Média de Gastos Mensais", f"R$ {format_currency_br(avg_expenses)}")
 
