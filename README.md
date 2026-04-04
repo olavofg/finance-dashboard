@@ -40,13 +40,36 @@ Interactive dashboard for personal finance tracking, developed with Streamlit an
 ### Google Sheets
 
 > ⚠️ **Disclaimer**
-> This spreadsheet is customized for my personal use and is currently private. However, the required structure is simple and can be adapted to your needs.
-> The dashboard expects sheets named by month (e.g., "Janeiro 2023", "Fevereiro 2024") and specific cells containing the key financial data. Feel free to modify the structure as needed for your own use.
+> This spreadsheet is customized for my personal use and is currently private. However, the required structure is simple and can be easily adapted to your needs.
 
-My template needs:
-* Sheets must be named in the format: "Janeiro 2023", "Fevereiro 2024", etc. (Portuguese month names)
-* Cell **M27**: Total monthly expenses
-* Cell **B6**: Total monthly salary/income
+#### How the code reads your spreadsheet
+
+The dashboard reads data from a single Google Sheets spreadsheet. Here's what it expects:
+
+1. **One sheet (tab) per month**, named in Portuguese: `Janeiro 2023`, `Fevereiro 2024`, `Março 2025`, etc. Tabs that don't match this pattern are simply ignored.
+
+2. **Two cells per sheet** — one for total expenses and one for total income:
+   | Data         | Default Cell | Constant in code |
+   |--------------|:------------:|------------------|
+   | **Expenses** | `M27`        | `EXPENSES_CELL`  |
+   | **Income**   | `B6`         | `INCOME_CELL`    |
+
+   The values should be in BRL format (e.g. `R$ 1.234,56` or just `1234.56`).
+
+3. **Everything else is computed automatically** — the dashboard calculates savings (`income - expenses`), savings rate (`savings / income × 100`), cumulative totals, averages, deltas, and projections from those two values per month.
+
+#### Adapting to your spreadsheet
+
+You only need to change **two constants** at the top of `dashboard.py`:
+
+```python
+EXPENSES_CELL = 'M27'  # Change to the cell where your total expenses are
+INCOME_CELL = 'B6'     # Change to the cell where your total income is
+```
+
+As long as every monthly tab has a total expense value and a total income value somewhere, the dashboard will work. The cells just need to be in the same position across all tabs.
+
+> **Example**: If your spreadsheet has expenses in cell `D50` and income in `D10`, just update the constants to `EXPENSES_CELL = 'D50'` and `INCOME_CELL = 'D10'`.
 
 
 ### Authentication (optional)
