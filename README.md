@@ -1,8 +1,8 @@
-# 💸 Financial Dashboard
+# Financial Dashboard
 
 Interactive dashboard for personal finance tracking, developed with Streamlit and integrated with Google Sheets.
 
-## 🌟 Features
+## ✨ Features
 
 * 📊 **Financial metrics**: Income, expenses, savings, averages, deltas, and annual projections
 * 📈 **Interactive charts**: Cumulative savings, savings rate with average line, composition %, and trend analysis
@@ -51,8 +51,8 @@ After creating and setting up your financial spreadsheet with the structure desc
 
 1. Go to the [Google Cloud Console](https://console.cloud.google.com/iam-admin/serviceaccounts)
 2. Create a service account and download the JSON key as `credentials.json`
-3. Enable the **Google Sheets API** in your GCP project
-4. Share your spreadsheet with the service account email (the `client_email` field in the JSON)
+3. Enable the **Google Sheets API**: go to [APIs & Services → Library](https://console.cloud.google.com/apis/library/sheets.googleapis.com), select your project, and click **Enable**
+4. Share your spreadsheet with the service account: open your Google Sheets spreadsheet, click **Share**, paste the `client_email` from your `credentials.json` (e.g. `your-service-account@your-project.iam.gserviceaccount.com`), and grant **Viewer** access
 
 **`credentials.json`** format:
 
@@ -76,15 +76,6 @@ After creating and setting up your financial spreadsheet with the structure desc
 
 The dashboard requires login to access. Users and passwords are configured in `config.yaml`. Passwords **must** be bcrypt-hashed.
 
-To generate a bcrypt hash:
-
-```bash
-pip install bcrypt
-python -c "import bcrypt; print(bcrypt.hashpw(b'your_password', bcrypt.gensalt()).decode())"
-```
-
-This will output something like `$2b$12$LJ3m4ys...` — use that value in the `password` field.
-
 **`config.yaml`** — user credentials, authentication settings, and spreadsheet URL:
 
 ```yaml
@@ -92,7 +83,7 @@ credentials:
   usernames:
     your_username:
       name: Your Name
-      password: $2b$12$...  # bcrypt-hashed password (see above)
+      password: $2b$12$...  # bcrypt-hashed password (see below)
 
 cookie:
   name: finance_dashboard_cookie
@@ -102,7 +93,16 @@ cookie:
 sheet_url: https://docs.google.com/spreadsheets/d/your-spreadsheet-id/edit
 ```
 
-## 🚀 Local Setup
+To generate a bcrypt hash for the `password` field:
+
+```bash
+pip install bcrypt
+python -c "import bcrypt; print(bcrypt.hashpw(b'your_password', bcrypt.gensalt()).decode())"
+```
+
+Replace `your_password` with your chosen password. This will output something like `$2b$12$LJ3m4ys...` — use that value in the `password` field.
+
+## � Local Setup
 
 1. **Clone the repository**
 
@@ -132,7 +132,9 @@ sheet_url: https://docs.google.com/spreadsheets/d/your-spreadsheet-id/edit
    docker run -p 8501:8501 finance-dashboard
    ```
 
-## ☁️ Deploy to Streamlit Community Cloud
+6. Open `http://localhost:8501` in your browser and log in with the credentials from your `config.yaml`
+
+## 🚀 Deploy to Streamlit Community Cloud
 
 1. Push your repository to GitHub (make sure secrets are **not** committed)
 2. Go to [Streamlit Community Cloud](https://share.streamlit.io/) and connect your GitHub repo
@@ -167,10 +169,11 @@ sheet_url: https://docs.google.com/spreadsheets/d/your-spreadsheet-id/edit
    > **Tip**: To convert your `credentials.json` to TOML, copy each JSON field as a key-value pair under `[google_sheets_credentials]`. Strings must be quoted and `\n` in the private key must be preserved as-is.
 
 4. Deploy — Streamlit will install dependencies from `requirements.txt` automatically
+5. Once deployed, access your dashboard at `https://your-app-name.streamlit.app` and log in with the credentials configured in your secrets
 
 > For more details, see the [Streamlit deploy documentation](https://docs.streamlit.io/deploy/streamlit-community-cloud).
 
-## 📦 Project Structure
+## �️ Project Structure
 
 ```
 ├── dashboard.py             # Main application
