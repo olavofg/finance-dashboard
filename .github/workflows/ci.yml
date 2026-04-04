@@ -22,8 +22,18 @@ jobs:
       - name: Run integration tests
         run: docker run --rm -v ${{ github.workspace }}/test-results:/app/test-results finance-dashboard python -m pytest tests/integration/ -v --tb=short --junitxml=/app/test-results/integration-results.xml
 
-      - name: Test Summary
-        uses: test-summary/action@v2
+      - name: Unit Test Report
+        uses: dorny/test-reporter@v2
         if: always()
         with:
-          paths: test-results/*.xml
+          name: Unit Tests
+          path: test-results/unit-results.xml
+          reporter: java-junit
+
+      - name: Integration Test Report
+        uses: dorny/test-reporter@v2
+        if: always()
+        with:
+          name: Integration Tests
+          path: test-results/integration-results.xml
+          reporter: java-junit
