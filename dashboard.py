@@ -281,7 +281,7 @@ else:
 
 # Charts
 st.subheader("📊 Gráficos de Análise Financeira")
-tabs = st.tabs(["💼 Receita vs Gastos", "📈 Economia Acumulada", "📉 Taxa de Economia", "📊 Composição %", "📈 Tendência"])
+tabs = st.tabs(["💼 Receita vs Gastos", "📊 Gastos vs Economia", "📶 Taxa de Economia", "📉 Tendência", "📈 Economia Acumulada"])
 
 if not df_filtered.empty:
     with tabs[0]:
@@ -296,29 +296,6 @@ if not df_filtered.empty:
         st.plotly_chart(fig, width='stretch')
 
     with tabs[1]:
-        cumulative = df_filtered[['Mês', 'Economia']].copy()
-        cumulative['Economia Acumulada'] = cumulative['Economia'].cumsum()
-        fig = px.area(cumulative, x='Mês', y='Economia Acumulada',
-                      text='Economia Acumulada', markers=True,
-                      labels={'Economia Acumulada': 'Total Acumulado (R$)'})
-        fig.update_traces(texttemplate='R$ %{text:,.2f}', textposition='top center',
-                          line=dict(color='#4A90D9'), fillcolor='rgba(74, 144, 217, 0.15)')
-        fig.update_layout(yaxis_tickprefix="R$ ")
-        st.plotly_chart(fig, width='stretch')
-
-    with tabs[2]:
-        fig = px.line(df_filtered, x='Mês', y='Taxa de Economia (%)',
-                      markers=True, text='Taxa de Economia (%)',
-                      labels={'Taxa de Economia (%)': 'Taxa (%)'})
-        fig.update_traces(texttemplate='%{text:.1f}%', textposition='top center',
-                          line=dict(color='#4A90D9', width=2))
-        avg_rate = df_filtered['Taxa de Economia (%)'].mean()
-        fig.add_hline(y=avg_rate, line_dash="dash", line_color="rgba(239, 85, 59, 0.6)",
-                      annotation_text=f"Média: {avg_rate:.1f}%", annotation_position="top left")
-        fig.update_layout(yaxis_ticksuffix="%")
-        st.plotly_chart(fig, width='stretch')
-
-    with tabs[3]:
         df_comp = df_filtered[['Mês', 'Total de Gastos', 'Economia']].copy()
         total = df_comp['Total de Gastos'] + df_comp['Economia']
         df_comp['Gastos (%)'] = df_comp['Total de Gastos'].div(total).fillna(0) * 100
@@ -334,7 +311,19 @@ if not df_filtered.empty:
         fig.update_layout(yaxis_ticksuffix="%", yaxis_range=[0, 100])
         st.plotly_chart(fig, width='stretch')
 
-    with tabs[4]:
+    with tabs[2]:
+        fig = px.line(df_filtered, x='Mês', y='Taxa de Economia (%)',
+                      markers=True, text='Taxa de Economia (%)',
+                      labels={'Taxa de Economia (%)': 'Taxa (%)'})
+        fig.update_traces(texttemplate='%{text:.1f}%', textposition='top center',
+                          line=dict(color='#4A90D9', width=2))
+        avg_rate = df_filtered['Taxa de Economia (%)'].mean()
+        fig.add_hline(y=avg_rate, line_dash="dash", line_color="rgba(239, 85, 59, 0.6)",
+                      annotation_text=f"Média: {avg_rate:.1f}%", annotation_position="top left")
+        fig.update_layout(yaxis_ticksuffix="%")
+        st.plotly_chart(fig, width='stretch')
+
+    with tabs[3]:
         fig = px.line(
             df_filtered.melt(id_vars='Mês', value_vars=['Total de Gastos', 'Economia'],
                             var_name='Tipo', value_name='Valor'),
@@ -348,6 +337,17 @@ if not df_filtered.empty:
                       annotation_text=f"Média Gastos: R$ {format_currency_br(avg_gastos)}", annotation_position="top left")
         fig.add_hline(y=avg_economia, line_dash="dash", line_color="rgba(0, 204, 150, 0.5)",
                       annotation_text=f"Média Economia: R$ {format_currency_br(avg_economia)}", annotation_position="bottom left")
+        fig.update_layout(yaxis_tickprefix="R$ ")
+        st.plotly_chart(fig, width='stretch')
+
+    with tabs[4]:
+        cumulative = df_filtered[['Mês', 'Economia']].copy()
+        cumulative['Economia Acumulada'] = cumulative['Economia'].cumsum()
+        fig = px.area(cumulative, x='Mês', y='Economia Acumulada',
+                      text='Economia Acumulada', markers=True,
+                      labels={'Economia Acumulada': 'Total Acumulado (R$)'})
+        fig.update_traces(texttemplate='R$ %{text:,.2f}', textposition='top center',
+                          line=dict(color='#4A90D9'), fillcolor='rgba(74, 144, 217, 0.15)')
         fig.update_layout(yaxis_tickprefix="R$ ")
         st.plotly_chart(fig, width='stretch')
 else:
