@@ -285,9 +285,11 @@ tabs = st.tabs(["💼 Receita vs Gastos", "📊 Gastos vs Economia", "📶 Taxa 
 
 if not df_filtered.empty:
     with tabs[0]:
+        df_chart = df_filtered[['Mês', 'Total de Receita', 'Total de Gastos']].rename(
+            columns={'Total de Receita': 'Receita', 'Total de Gastos': 'Gastos'})
         fig = px.bar(
-            df_filtered.melt(id_vars='Mês', value_vars=['Total de Receita', 'Total de Gastos'],
-                            var_name='Tipo', value_name='Valor'),
+            df_chart.melt(id_vars='Mês', value_vars=['Receita', 'Gastos'],
+                         var_name='Tipo', value_name='Valor'),
             x='Mês', y='Valor', color='Tipo', barmode='group', text='Valor',
             labels={'Valor': 'Total (R$)', 'Tipo': 'Tipo de Valor'}
         )
@@ -324,12 +326,14 @@ if not df_filtered.empty:
         st.plotly_chart(fig, width='stretch')
 
     with tabs[3]:
+        df_chart = df_filtered[['Mês', 'Total de Gastos', 'Economia']].rename(
+            columns={'Total de Gastos': 'Gastos'})
         fig = px.line(
-            df_filtered.melt(id_vars='Mês', value_vars=['Total de Gastos', 'Economia'],
-                            var_name='Tipo', value_name='Valor'),
+            df_chart.melt(id_vars='Mês', value_vars=['Gastos', 'Economia'],
+                         var_name='Tipo', value_name='Valor'),
             x='Mês', y='Valor', color='Tipo', markers=True,
             labels={'Valor': 'Total (R$)', 'Tipo': 'Tipo'},
-            color_discrete_map={'Total de Gastos': '#EF553B', 'Economia': '#00CC96'}
+            color_discrete_map={'Gastos': '#EF553B', 'Economia': '#00CC96'}
         )
         avg_gastos = df_filtered['Total de Gastos'].mean()
         avg_economia = df_filtered['Economia'].mean()
