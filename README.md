@@ -8,7 +8,7 @@ Interactive dashboard for personal finance tracking, developed with Streamlit an
 
    ```bash
    git clone <repository-url>
-   cd dashboard
+   cd finance-dashboard
    ```
 
 2. **Install dependencies**
@@ -28,16 +28,23 @@ Interactive dashboard for personal finance tracking, developed with Streamlit an
    streamlit run dashboard.py
    ```
 
+5. **Or run with Docker**
+
+   ```bash
+   docker build -t finance-dashboard .
+   docker run -p 8501:8501 finance-dashboard
+   ```
+
 ## ⚙️ Configuration
 
 ### Google Sheets
 
 > ⚠️ **Disclaimer**
 > This spreadsheet is customized for my personal use and is currently private. However, the required structure is simple and can be adapted to your needs.
-> The dashboard expects sheets named by month (e.g., "January 2023", "February 2024") and specific cells containing the key financial data. Feel free to modify the structure as needed for your own use.
+> The dashboard expects sheets named by month (e.g., "Janeiro 2023", "Fevereiro 2024") and specific cells containing the key financial data. Feel free to modify the structure as needed for your own use.
 
 My template needs:
-* Sheets must be named in the format: "January 2023", "February 2024", etc.
+* Sheets must be named in the format: "Janeiro 2023", "Fevereiro 2024", etc. (Portuguese month names)
 * Cell **M27**: Total monthly expenses
 * Cell **B6**: Total monthly salary/income
 
@@ -45,6 +52,45 @@ My template needs:
 ### Authentication (optional)
 
 Configure users and passwords in the `config.yaml` file
+
+### Local config files
+
+**`config.yaml`** — user credentials, authentication settings, and spreadsheet URL:
+
+```yaml
+credentials:
+  usernames:
+    your_username:
+      name: Your Name
+      password: $2b$12$...  # bcrypt-hashed password
+
+cookie:
+  name: finance_dashboard_cookie
+  key: some_random_secret_key
+  expiry_days: 30
+
+sheet_url: https://docs.google.com/spreadsheets/d/your-spreadsheet-id/edit
+```
+
+**`credentials.json`** — Google Sheets service account credentials:
+
+```json
+{
+  "type": "service_account",
+  "project_id": "your-project-id",
+  "private_key_id": "...",
+  "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
+  "client_email": "your-service-account@your-project.iam.gserviceaccount.com",
+  "client_id": "...",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/your-service-account%40your-project.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
+```
+
+> Download this file from the Google Cloud Console under **IAM & Admin → Service Accounts → Keys**.
 
 ## 🌟 Features
 
@@ -58,13 +104,16 @@ Configure users and passwords in the `config.yaml` file
 
 ```
 ├── dashboard.py             # Main application
-├── streamlit_service.py     # Helper services
-├── config.yaml              # Settings and credentials
-├── credentials.json         # Google Sheets credentials
-└── requirements.txt         # Python dependencies
+├── streamlit_service.py     # Config loader (secrets / local files)
+├── config.yaml              # User credentials (local dev, git-ignored)
+├── credentials.json         # Google Sheets credentials (local dev, git-ignored)
+├── Dockerfile               # Local development container
+├── requirements.txt         # Python dependencies
+└── .gitignore               # Prevents secrets from being committed
 ```
 
 ## 🔒 Security
 
-* Credentials stored securely in configuration files
-* Optional password-based authentication
+* **Never commit secrets**: `config.yaml` and `credentials.json` are in `.gitignore`
+* **Production**: credentials are stored in [Streamlit Secrets](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management)
+* Optional password-based authentication via `streamlit-authenticator`
