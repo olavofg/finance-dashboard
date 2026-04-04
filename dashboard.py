@@ -352,7 +352,14 @@ if not df_filtered.empty:
                       labels={'Economia Acumulada': 'Total Acumulado (R$)'})
         fig.update_traces(texttemplate='R$ %{text:,.2f}', textposition='top center',
                           line=dict(color='#4A90D9'), fillcolor='rgba(74, 144, 217, 0.15)')
-        fig.update_layout(yaxis_tickprefix="R$ ")
+        y_max = cumulative['Economia Acumulada'].max()
+        y_min = cumulative['Economia Acumulada'].min()
+        y_margin = (y_max - y_min) * 0.15 if y_max != y_min else abs(y_max) * 0.15 or 1
+        fig.update_layout(
+            yaxis_tickprefix="R$ ",
+            yaxis_range=[y_min - y_margin * 0.3, y_max + y_margin],
+            xaxis=dict(range=[-0.5, len(cumulative) - 0.5]),
+        )
         st.plotly_chart(fig, width='stretch')
 else:
     st.info("Não há dados no período selecionado para gerar os gráficos.")
