@@ -22,18 +22,64 @@ jobs:
       - name: Run integration tests
         run: docker run --rm -v ${{ github.workspace }}/test-results:/app/test-results finance-dashboard python -m pytest tests/integration/ -v --tb=short --junitxml=/app/test-results/integration-results.xml
 
-      - name: Unit Test Report
-        uses: dorny/test-reporter@v2
+      - name: Test Summary
         if: always()
-        with:
-          name: Unit Tests
-          path: test-results/unit-results.xml
-          reporter: java-junit
+        run: |
+          python3 - <<'EOF' >> $GITHUB_STEP_SUMMARY
+          import xml.etree.ElementTree as ET
+          import glob, os
 
-      - name: Integration Test Report
-        uses: dorny/test-reporter@v2
-        if: always()
-        with:
-          name: Integration Tests
-          path: test-results/integration-results.xml
-          reporter: java-junit
+          print("## 🧪 Test Results\n")
+          total_tests = total_passed = total_failed = total_skipped = total_errors = 0
+
+          for xml_file in sorted(glob.glob("test-results/*.xml")):
+              tree = ET.parse(xml_file)
+              root = tree.getroot()
+              suite_name = os.path.basename(xml_file).replace("-results.xml", "").replace("-", " ").title()
+
+              tests = int(root.attrib.get("tests", 0))
+              failures = int(root.attrib.get("failures", 0))
+              errors = int(root.attrib.get("errors", 0))
+              skipped = int(root.attrib.get("skipped", 0))
+              passed = tests - failures - errors - skipped
+              time_taken = float(root.attrib.get("time", 0))
+
+              total_tests += tests
+              total_passed += passed
+              total_failed += failures + errors
+              total_skipped += skipped
+
+              status = "✅" if (failures + errors) == 0 else "❌"
+              print(f"### {status} {suite_name} Tests\n")
+              print(f"| Metric | Count |")
+              print(f"|--------|-------|")
+              print(f"| Total | {tests} |")
+              print(f"| ✅ Passed | {passed} |")
+              print(f"| ❌ Failed | {failures + errors} |")
+              print(f"| ⏭️ Skipped | {skipped} |")
+              print(f"| ⏱️ Duration | {time_taken:.2f}s |")
+              print()
+
+              # Show individual test details
+              for testcase in root.iter("testcase"):
+                  tc_name = testcase.attrib.get("name", "unknown")
+                  tc_time = float(testcase.attrib.get("time", 0))
+                  failure = testcase.find("failure")
+                  error = testcase.find("error")
+                  skip = testcase.find("skipped")
+                  if failure is not None:
+                      print(f"- ❌ `{tc_name}` ({tc_time:.2f}s)")
+                      print(f"  > {failure.attrib.get('message', '')[:200]}")
+                  elif error is not None:
+                      print(f"- ❌ `{tc_name}` ({tc_time:.2f}s)")
+                      print(f"  > {error.attrib.get('message', '')[:200]}")
+                  elif skip is not None:
+                      print(f"- ⏭️ `{tc_name}`")
+                  else:
+                      print(f"- ✅ `{tc_name}` ({tc_time:.2f}s)")
+              print()
+
+          overall = "✅ All tests passed" if total_failed == 0 else f"❌ {total_failed} test(s) failed"
+          print(f"---\n### Summary: {overall}\n")
+          print(f"**Total: {total_tests}** | Passed: {total_passed} | Failed: {total_failed} | Skipped: {total_skipped}")
+          EOF
