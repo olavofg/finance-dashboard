@@ -32,7 +32,8 @@ jobs:
           print("## 🧪 Test Results\n")
           total_tests = total_passed = total_failed = total_skipped = total_errors = 0
 
-          for xml_file in sorted(glob.glob("test-results/*.xml")):
+          file_order = ["test-results/unit-results.xml", "test-results/integration-results.xml"]
+          for xml_file in [f for f in file_order if os.path.exists(f)]:
               tree = ET.parse(xml_file)
               root = tree.getroot()
               suite_name = os.path.basename(xml_file).replace("-results.xml", "").replace("-", " ").title()
@@ -62,7 +63,7 @@ jobs:
               print(f"| ⏱️ Duration | {time_taken:.2f}s |")
               print()
 
-              # Show individual test details
+              # Only show failed/errored/skipped tests
               for testcase in root.iter("testcase"):
                   tc_name = testcase.attrib.get("name", "unknown")
                   tc_time = float(testcase.attrib.get("time", 0))
@@ -77,8 +78,6 @@ jobs:
                       print(f"  > {error.attrib.get('message', '')[:200]}")
                   elif skip is not None:
                       print(f"- ⏭️ `{tc_name}`")
-                  else:
-                      print(f"- ✅ `{tc_name}` ({tc_time:.2f}s)")
               print()
 
           overall = "✅ All tests passed" if total_failed == 0 else f"❌ {total_failed} test(s) failed"
