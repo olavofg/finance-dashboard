@@ -1,7 +1,7 @@
-streamlit
-pandas
-gspread
-google-auth
-plotly
-streamlit_authenticator==0.2.1
-PyYAML
+streamlit==1.56.0
+pandas==3.0.2
+gspread==6.2.1
+google-auth==2.49.1
+plotly==6.6.0
+streamlit_authenticator==0.3.3
+PyYAML==6.0.3

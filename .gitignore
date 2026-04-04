@@ -1,4 +1,3 @@
-# Python
 __pycache__/
 *.py[cod]
 *.pyo
@@ -6,30 +5,24 @@ __pycache__/
 .Python
 *.egg-info/
 
-# Virtual environments
 .env
 .venv
 venv/
 env/
 
-# Streamlit
 .streamlit/
 secrets.toml
 DEPLOY.md
 
-# Sensitive files (NOT for production)
 config.yaml
 credentials.json
 
-# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# System files
 .DS_Store
 Thumbs.db
 
-# Logs
 *.log
