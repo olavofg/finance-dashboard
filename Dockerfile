@@ -1,4 +1,4 @@
-# Local development only. Streamlit Community Cloud does not use Docker.
+# Local development only
 
 FROM python:3.11-slim
 

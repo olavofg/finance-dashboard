@@ -32,7 +32,7 @@ The dashboard reads data from a single Google Sheets spreadsheet. Here's what it
 
 ### Adapting to your spreadsheet
 
-You only need to change **two constants** at the top of `dashboard.py`:
+You only need to change [**two constants** in `constants.py`](constants.py#L1-L2):
 
 ```python
 EXPENSES_CELL = 'M27'  # Change to the cell where your total expenses are
@@ -178,14 +178,20 @@ Replace `your_password` with your chosen password. This will output something li
 ## 🗂️ Project Structure
 
 ```
-├── dashboard.py             # Main application
+├── dashboard.py             # Main application (UI layer)
+├── data_service.py          # Google Sheets data access layer
+├── helpers.py               # Pure helper / formatting functions
+├── constants.py             # Static constants and configuration
 ├── streamlit_service.py     # Config loader (secrets / local files)
+├── tests/                   # Unit & integration tests (CI pipeline)
+├── .github/workflows/ci.yml # CI pipeline (tests + Docker build)
 ├── .streamlit/config.toml   # Streamlit theme settings
 ├── config.yaml              # User credentials (local dev, git-ignored)
 ├── credentials.json         # Google Sheets credentials (local dev, git-ignored)
+├── pyproject.toml           # Pytest configuration
 ├── Dockerfile               # Container for local development
 ├── requirements.txt         # Python dependencies
-└── .gitignore               # Prevents secrets from being committed
+└── .gitignore               # Prevents sensitive files from being committed
 ```
 
 ## 🔒 Security
