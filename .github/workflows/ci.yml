@@ -7,31 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  build-and-test:
     runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-          pip install pytest
-
-      - name: Run unit tests
-        run: pytest tests/unit/ -v --tb=short
-
-      - name: Run integration tests
-        run: pytest tests/integration/ -v --tb=short
-
-  docker-build:
-    runs-on: ubuntu-latest
-    needs: test
 
     steps:
       - uses: actions/checkout@v4
@@ -39,5 +16,8 @@ jobs:
       - name: Build Docker image
         run: docker build -t finance-dashboard .
 
-      - name: Run tests inside Docker
-        run: docker run --rm finance-dashboard python -m pytest tests/ -v --tb=short
+      - name: Run unit tests
+        run: docker run --rm finance-dashboard python -m pytest tests/unit/ -v --tb=short
+
+      - name: Run integration tests
+        run: docker run --rm finance-dashboard python -m pytest tests/integration/ -v --tb=short
