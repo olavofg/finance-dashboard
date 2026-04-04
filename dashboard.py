@@ -281,7 +281,13 @@ else:
 
 # Charts
 st.subheader("📊 Gráficos de Análise Financeira")
-tabs = st.tabs(["💼 Receita vs Gastos", "📊 Proporção: Gastos vs Economia", "💰 Taxa de Economia", "📉 Evolução Mensal", "📈 Economia Acumulada"])
+tabs = st.tabs([
+    "💼 Receita vs Gastos",
+    "📊 Distribuição de Gastos e Economia",
+    "💰 Taxa de Economia",
+    "📉 Evolução de Gastos e Economia",
+    "📈 Economia Acumulada"
+])
 
 if not df_filtered.empty:
     with tabs[0]:
